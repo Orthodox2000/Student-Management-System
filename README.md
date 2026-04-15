@@ -194,9 +194,8 @@ SKIP_DATACONNECT_CHECK=true
 
 Current status:
 
-- student photos are stored locally in `public/uploads`
-- this is acceptable for local development
-- it is not the final production storage approach
+- student photos are uploaded to Firebase Storage when bucket env is configured
+- the signed file URL is stored as the student photo reference
 
 Recommended production approach:
 

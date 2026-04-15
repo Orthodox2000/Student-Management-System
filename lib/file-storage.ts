@@ -1,8 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { getFirebaseAdminStorage } from "@/lib/firebase-admin";
 
-const uploadDir = path.join(process.cwd(), "public", "uploads");
 const maxPhotoSizeBytes = 5 * 1024 * 1024;
 
 export async function savePhoto(file: File) {
@@ -15,13 +13,24 @@ export async function savePhoto(file: File) {
   if (!extension) {
     throw new Error("Unsupported photo type. Use png, jpg, jpeg, or webp.");
   }
-  const safeName = `${Date.now()}-${randomUUID()}${extension}`;
+  const safeName = `students/${Date.now()}-${randomUUID()}${extension}`;
+  const bucket = getFirebaseAdminStorage();
+  const storageFile = bucket.file(safeName);
 
-  await mkdir(uploadDir, { recursive: true });
-  const absolutePath = path.join(uploadDir, safeName);
-  await writeFile(absolutePath, bytes);
+  await storageFile.save(bytes, {
+    metadata: {
+      contentType: file.type || getContentType(extension),
+      cacheControl: "public, max-age=31536000, immutable",
+    },
+    resumable: false,
+  });
 
-  return `/uploads/${safeName}`;
+  const [signedUrl] = await storageFile.getSignedUrl({
+    action: "read",
+    expires: "03-01-2500",
+  });
+
+  return signedUrl;
 }
 
 function getSafeExtension(name: string, type: string) {
@@ -31,4 +40,10 @@ function getSafeExtension(name: string, type: string) {
   if (lower.endsWith(".jpeg") || lower.endsWith(".jpg") || type.includes("jpeg"))
     return ".jpg";
   return "";
+}
+
+function getContentType(extension: string) {
+  if (extension === ".png") return "image/png";
+  if (extension === ".webp") return "image/webp";
+  return "image/jpeg";
 }

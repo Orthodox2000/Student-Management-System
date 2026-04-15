@@ -87,6 +87,7 @@ Validation notes:
 - year must match supported academic year values
 - mobile number must contain 10 to 15 digits after normalization
 - photo must be png, jpg, jpeg, or webp and 5 MB or smaller
+- uploaded photos are stored in Firebase Storage and the signed URL is saved in the student record
 
 ## `PUT /api/students/:id`
 
@@ -142,5 +143,4 @@ Runs internal checks such as admission number format and database access checks.
 
 ## Notes
 
-- images are currently stored locally for development
-- production should move photo storage to Firebase Storage
+- images are uploaded to Firebase Storage when bucket env is configured

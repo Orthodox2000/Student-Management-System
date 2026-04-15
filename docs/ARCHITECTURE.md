@@ -44,11 +44,10 @@
 
 Current:
 
-- saved to local `public/uploads`
+- uploaded through server-side Firebase Admin Storage
 
 Recommended production:
 
-- move to Firebase Storage
 - keep photo URL/reference in student record
 
 ## Core Files

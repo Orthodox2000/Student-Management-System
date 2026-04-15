@@ -41,12 +41,12 @@ Production target:
 
 Current:
 
-- [file-storage.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/file-storage.ts) writes images to local `public/uploads`
+- [file-storage.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/file-storage.ts) uploads images to Firebase Storage using Firebase Admin SDK
 
 Production recommendation:
 
 1. enable Firebase Storage in the Firebase project
-2. add bucket env if needed on server side:
+2. add bucket env on server side:
    - `FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app`
 3. update the upload flow to use Firebase Admin Storage
 4. upload files into a folder such as `students/`

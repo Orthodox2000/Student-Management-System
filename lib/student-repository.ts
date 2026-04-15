@@ -31,7 +31,7 @@ type StudentCreateVars = {
   photoUrl?: string | null;
 };
 
-type StudentUpdateVars = StudentCreateVars & { id: string };
+type StudentUpdateVars = Omit<StudentCreateVars, "admissionNumber"> & { id: string };
 
 function mapInputToVars(input: StudentInput, photoUrl: string | null | undefined): StudentCreateVars {
   return {
@@ -97,10 +97,18 @@ export async function updateStudent(
   }
 
   const dc = getAdminDataConnect();
+  const mapped = mapInputToVars(input, photoUrl === undefined ? existing.photoUrl ?? null : photoUrl);
   const vars: StudentUpdateVars = {
-    ...mapInputToVars(input, photoUrl === undefined ? existing.photoUrl ?? null : photoUrl),
+    name: mapped.name,
+    course: mapped.course,
+    year: mapped.year,
+    dateOfBirth: mapped.dateOfBirth,
+    email: mapped.email,
+    mobileNumber: mapped.mobileNumber,
+    gender: mapped.gender,
+    address: mapped.address,
+    photoUrl: mapped.photoUrl,
     id,
-    admissionNumber: existing.admissionNumber,
   };
 
   await dc.executeMutation<unknown, StudentUpdateVars>("UpdateStudent", vars, undefined);
