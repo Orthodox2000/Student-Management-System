@@ -1,0 +1,33 @@
+{
+  "name": "student-management-system",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "predev": "npm run test:startup",
+    "dev": "next dev",
+    "build": "next build",
+    "prestart": "npm run test:startup",
+    "start": "next start",
+    "test:startup": "node scripts/startup-check.mjs",
+    "emulators:dataconnect": "npx firebase-tools emulators:start --only dataconnect"
+  },
+  "dependencies": {
+    "@dataconnect/admin-generated": "file:src/dataconnect-admin-generated",
+    "@dataconnect/generated": "file:src/dataconnect-generated",
+    "firebase": "^12.12.0",
+    "firebase-admin": "^13.8.0",
+    "next": "16.2.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
