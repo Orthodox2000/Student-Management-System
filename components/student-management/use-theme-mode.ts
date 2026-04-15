@@ -7,8 +7,7 @@ export function useThemeMode() {
 
   useEffect(() => {
     const stored = window.localStorage.getItem("sms-theme");
-    const shouldDark =
-      stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const shouldDark = stored === "dark";
     setDarkMode(shouldDark);
     document.documentElement.classList.toggle("dark", shouldDark);
   }, []);
