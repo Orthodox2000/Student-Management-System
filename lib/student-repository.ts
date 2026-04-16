@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { buildAdmissionNumber } from "@/lib/admission-number";
+import { formatIndianPhoneForStorage, sanitizePhone } from "@/lib/sanitize";
 import type { StudentInput } from "@/lib/types";
 
 type StudentRow = {
@@ -39,7 +40,7 @@ function mapInputToInsert(input: StudentInput, photoUrl: string | null | undefin
     year: input.year,
     date_of_birth: input.dateOfBirth,
     email: input.email,
-    mobile_number: input.mobileNumber,
+    mobile_number: formatIndianPhoneForStorage(input.mobileNumber),
     gender: input.gender,
     address: input.address,
     photo_url: photoUrl ?? null,
@@ -55,7 +56,7 @@ function mapRow(row: StudentRow) {
     year: row.year,
     dateOfBirth: row.date_of_birth,
     email: row.email,
-    mobileNumber: row.mobile_number,
+    mobileNumber: sanitizePhone(row.mobile_number),
     gender: row.gender,
     address: row.address,
     photoUrl: row.photo_url,
@@ -129,7 +130,7 @@ export async function updateStudent(id: string, input: StudentInput, photoUrl: s
       year: input.year,
       date_of_birth: input.dateOfBirth,
       email: input.email,
-      mobile_number: input.mobileNumber,
+      mobile_number: formatIndianPhoneForStorage(input.mobileNumber),
       gender: input.gender,
       address: input.address,
       photo_url: nextPhotoUrl,

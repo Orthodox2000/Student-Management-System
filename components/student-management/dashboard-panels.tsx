@@ -195,7 +195,7 @@ export function StudentFormPanel({
         </SelectField>
         <InputField label="Date of Birth" type="date" value={form.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} required error={errors.dateOfBirth} />
         <InputField label="Email" type="email" value={form.email} onChange={(value) => onChange("email", value)} required placeholder="student@example.com" error={errors.email} maxLength={180} />
-        <InputField label="Mobile Number" value={form.mobileNumber} onChange={(value) => onChange("mobileNumber", value)} required placeholder="+91 9876543210" error={errors.mobileNumber} maxLength={14} inputMode="numeric" />
+        <InputField label="Mobile Number" value={form.mobileNumber} onChange={(value) => onChange("mobileNumber", value)} required placeholder="9876543210" error={errors.mobileNumber} maxLength={10} inputMode="numeric" />
 
         <SelectField label="Gender" value={form.gender} onChange={(value) => onGenderChange(value as Student["gender"])} error={errors.gender}>
           <option value="Male">Male</option>
@@ -300,7 +300,7 @@ export function EditStudentModal({
               </SelectField>
               <InputField label="Date of Birth" type="date" value={form.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} required error={errors.dateOfBirth} />
               <InputField label="Email" type="email" value={form.email} onChange={(value) => onChange("email", value)} required placeholder="student@example.com" error={errors.email} maxLength={180} />
-              <InputField label="Mobile Number" value={form.mobileNumber} onChange={(value) => onChange("mobileNumber", value)} required placeholder="+91 9876543210" error={errors.mobileNumber} maxLength={14} inputMode="numeric" />
+              <InputField label="Mobile Number" value={form.mobileNumber} onChange={(value) => onChange("mobileNumber", value)} required placeholder="9876543210" error={errors.mobileNumber} maxLength={10} inputMode="numeric" />
 
               <SelectField label="Gender" value={form.gender} onChange={(value) => onGenderChange(value as Student["gender"])} error={errors.gender}>
                 <option value="Male">Male</option>

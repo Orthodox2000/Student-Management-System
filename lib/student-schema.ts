@@ -17,7 +17,7 @@ export const studentFormSchema = z.object({
   mobileNumber: z
     .string()
     .trim()
-    .regex(/^\+91\s\d{10}$/, "Phone number must be 10 digits and will be stored with +91."),
+    .regex(/^\d{10}$/, "Phone number must be exactly 10 digits."),
   gender: z.enum(["Male", "Female", "Other"]),
   address: z.string().trim().min(5).max(400),
 });

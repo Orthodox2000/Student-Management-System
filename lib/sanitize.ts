@@ -44,15 +44,21 @@ export function sanitizeEmail(value: unknown) {
 
 export function sanitizePhone(value: unknown) {
   const digitsOnly = String(value ?? "").replace(/\D/g, "");
-  const localDigits = digitsOnly.startsWith("91") && digitsOnly.length > 10
-    ? digitsOnly.slice(2, 12)
-    : digitsOnly.slice(0, 10);
 
-  if (!localDigits) {
+  if (digitsOnly.length === 0) {
     return "";
   }
 
-  return `+91 ${localDigits}`;
+  if (digitsOnly.length > 10 && digitsOnly.startsWith("91")) {
+    return digitsOnly.slice(2, 12);
+  }
+
+  return digitsOnly.slice(0, 10);
+}
+
+export function formatIndianPhoneForStorage(value: unknown) {
+  const localDigits = sanitizePhone(value);
+  return localDigits ? `+91 ${localDigits}` : "";
 }
 
 export function sanitizeDate(value: unknown) {
