@@ -1,42 +1,34 @@
 import { handleApiError, jsonResponse } from "@/lib/api";
-import { handleAuthError, requireFirebaseAuth } from "@/lib/firebase-auth";
-import { createStudent, listStudents } from "@/lib/student-repository";
+import { handleAdminAuthError, requireAdminSession } from "@/lib/admin-session";
 import { sampleStudents } from "@/lib/sample-students";
+import { createStudent } from "@/lib/student-repository";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    await requireFirebaseAuth(request);
+    await requireAdminSession(request);
 
-    const existingStudents = await listStudents();
-    const existingEmails = new Set(existingStudents.map((student) => student.email.toLowerCase()));
-
-    let created = 0;
-    let skipped = 0;
-
+    const created = [];
     for (const student of sampleStudents) {
-      if (existingEmails.has(student.email.toLowerCase())) {
-        skipped += 1;
-        continue;
+      try {
+        const row = await createStudent(student, null);
+        created.push(row);
+      } catch (error) {
+        const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+        if (code !== "23505") {
+          throw error;
+        }
       }
-
-      await createStudent(student, null);
-      existingEmails.add(student.email.toLowerCase());
-      created += 1;
     }
 
     return jsonResponse({
-      created,
-      skipped,
-      message:
-        created > 0
-          ? `${created} dummy student record(s) added successfully.`
-          : "All dummy students already exist.",
+      message: created.length > 0 ? `Loaded ${created.length} dummy students.` : "Dummy students already exist.",
+      students: created,
     });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("Unauthorized:")) {
-      return handleAuthError(error);
+      return handleAdminAuthError(error);
     }
     return handleApiError(error);
   }

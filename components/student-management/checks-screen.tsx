@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { signOut } from "firebase/auth";
 import { ManagementNavbar } from "@/components/student-management/management-navbar";
 import { SectionCard, SectionEyebrow } from "@/components/student-management/ui";
 import { useAdminSession } from "@/components/student-management/use-admin-session";
 import { useThemeMode } from "@/components/student-management/use-theme-mode";
-import { getFirebaseAuth } from "@/lib/firebase-client";
 
 const defaultChecks = {
-  "/api/health/firebase": "Ready to test Firebase cloud authentication.",
-  "/api/health": "Ready to test API and Data Connect status.",
+  "/api/health/supabase": "Ready to test Supabase database and storage.",
+  "/api/health": "Ready to test API and Supabase status.",
   "/api/health/live": "Ready to test app liveness.",
   "/api/health/ready": "Ready to test readiness and data access.",
   "/api/health/self-test": "Ready to test internal startup probes.",
@@ -18,29 +16,31 @@ const defaultChecks = {
   "/api/auth/me": "Requires admin login. This page can test it after auth is active.",
   "/api/students": "Requires admin login. This page can test it after auth is active.",
 } as const;
+const SESSION_STORAGE_KEY = "pillai_admin_session_token";
 
 export function ChecksScreen() {
   const { user, loading } = useAdminSession("protected");
   const { darkMode, toggleTheme } = useThemeMode();
   const [checks, setChecks] = useState<Record<string, string>>(defaultChecks);
   const [running, setRunning] = useState(false);
-  const [summary, setSummary] = useState("Run the checks to confirm Firebase, API, and protected route connectivity.");
+  const [summary, setSummary] = useState("Run the checks to confirm Supabase, API, and protected route connectivity.");
 
   useEffect(() => {
     if (!user) return;
     void runChecks();
   }, [user]);
 
-  async function getAuthHeaders() {
-    const token = await user?.getIdToken();
-    if (!token) throw new Error("Not authenticated");
-    return { Authorization: `Bearer ${token}` };
-  }
-
-  async function testEndpoint(endpoint: string, protectedRoute = false) {
+  async function testEndpoint(endpoint: string) {
     try {
+      const sessionToken =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem(SESSION_STORAGE_KEY)
+          : null;
+
       const res = await fetch(endpoint, {
-        headers: protectedRoute ? await getAuthHeaders() : undefined,
+        cache: "no-store",
+        credentials: "include",
+        headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : undefined,
       });
       const data = await res.json().catch(() => null);
       const message = data?.message || data?.error || data?.status || "ok";
@@ -54,19 +54,35 @@ export function ChecksScreen() {
     setRunning(true);
     const nextChecks: Record<string, string> = {};
 
-    nextChecks["/api/health/firebase"] = await testEndpoint("/api/health/firebase");
+    nextChecks["/api/health/supabase"] = await testEndpoint("/api/health/supabase");
     nextChecks["/api/health"] = await testEndpoint("/api/health");
     nextChecks["/api/health/live"] = await testEndpoint("/api/health/live");
     nextChecks["/api/health/ready"] = await testEndpoint("/api/health/ready");
     nextChecks["/api/health/self-test"] = await testEndpoint("/api/health/self-test");
     nextChecks["/api/health/routes"] = await testEndpoint("/api/health/routes");
-    nextChecks["/api/auth/me"] = await testEndpoint("/api/auth/me", true);
-    nextChecks["/api/students"] = await testEndpoint("/api/students", true);
+    nextChecks["/api/auth/me"] = await testEndpoint("/api/auth/me");
+    nextChecks["/api/students"] = await testEndpoint("/api/students");
 
     setChecks(nextChecks);
     const failedCount = Object.values(nextChecks).filter((value) => value.startsWith("failed")).length;
     setSummary(failedCount === 0 ? "All system checks passed." : `${failedCount} check(s) need attention.`);
     setRunning(false);
+  }
+
+  async function handleLogout() {
+    const sessionToken =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(SESSION_STORAGE_KEY)
+        : null;
+
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : undefined,
+    });
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    }
   }
 
   if (loading) {
@@ -96,13 +112,13 @@ export function ChecksScreen() {
           { href: "/checks", label: "System Checks" },
         ]}
         onToggleTheme={toggleTheme}
-        onLogout={() => void signOut(getFirebaseAuth())}
+        onLogout={handleLogout}
       />
       <main className="section-shell px-4 pb-12 pt-5 sm:px-6 sm:pb-16 sm:pt-6">
         <SectionCard className="panel-spotlight">
           <SectionEyebrow>System Checks</SectionEyebrow>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[var(--foreground-strong)] sm:text-4xl">
-            Firebase, API, and protected route diagnostics
+            Supabase, API, and protected route diagnostics
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--foreground-muted)] sm:text-base">
             This page holds all operational connection tests so the main dashboard can stay focused on student management work.

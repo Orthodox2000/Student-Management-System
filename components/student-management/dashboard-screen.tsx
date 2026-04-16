@@ -2,14 +2,12 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
 import { AdminActionPanel, DashboardHero, DashboardStats, EditStudentModal, StudentFormPanel, StudentListPanel } from "@/components/student-management/dashboard-panels";
 import { ManagementNavbar } from "@/components/student-management/management-navbar";
 import { SectionCard, SectionEyebrow } from "@/components/student-management/ui";
 import type { HealthStatus, Student, StudentFormState } from "@/components/student-management/types";
 import { useAdminSession } from "@/components/student-management/use-admin-session";
 import { useThemeMode } from "@/components/student-management/use-theme-mode";
-import { getFirebaseAuth } from "@/lib/firebase-client";
 import { COURSE_OPTIONS, normalizeCourseLabel } from "@/lib/student-options";
 import { studentFormSchema } from "@/lib/student-schema";
 import { sanitizeDate, sanitizeEmail, sanitizeMultilineText, sanitizePhone, sanitizeText } from "@/lib/sanitize";
@@ -26,9 +24,9 @@ const initialForm: StudentFormState = {
 };
 
 const adminAccount = {
-  email: process.env.NEXT_PUBLIC_ADMIN_LOGIN_EMAIL ?? "admin@pillai.local",
-  password: process.env.NEXT_PUBLIC_ADMIN_LOGIN_PASSWORD ?? "Admin@12345",
+  email: process.env.NEXT_PUBLIC_ADMIN_LOGIN_EMAIL ?? "Configured on server",
 };
+const SESSION_STORAGE_KEY = "pillai_admin_session_token";
 
 type FormErrors = Partial<Record<keyof StudentFormState | "photo", string>>;
 
@@ -62,6 +60,15 @@ function mapZodErrors(form: StudentFormState) {
   }
 
   return { parsed: null, errors };
+}
+
+function getSessionHeaders() {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  const token = window.localStorage.getItem(SESSION_STORAGE_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
 }
 
 export function DashboardScreen() {
@@ -140,18 +147,14 @@ export function DashboardScreen() {
     setEditFormErrors({});
   }, [editingStudent]);
 
-  async function getAuthHeaders() {
-    const token = await user?.getIdToken();
-    if (!token) throw new Error("Not authenticated");
-    return { Authorization: `Bearer ${token}` };
-  }
-
   async function loadStudents() {
     if (!user) return;
     setListLoading(true);
     try {
       const res = await fetch("/api/students", {
-        headers: await getAuthHeaders(),
+        cache: "no-store",
+        credentials: "include",
+        headers: getSessionHeaders(),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Unable to load students");
@@ -165,11 +168,15 @@ export function DashboardScreen() {
 
   async function loadHealth() {
     try {
-      const res = await fetch("/api/health");
+      const res = await fetch("/api/health", {
+        cache: "no-store",
+        credentials: "include",
+        headers: getSessionHeaders(),
+      });
       const data = await res.json();
       setHealth(data);
     } catch {
-      setHealth({ status: "degraded", dataconnect: { status: "unavailable" } });
+      setHealth({ status: "degraded", database: { status: "unavailable", provider: "supabase" } });
     }
   }
 
@@ -257,7 +264,8 @@ export function DashboardScreen() {
       const res = await fetch("/api/students", {
         method: "POST",
         body: payload,
-        headers: await getAuthHeaders(),
+        credentials: "include",
+        headers: getSessionHeaders(),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -279,7 +287,8 @@ export function DashboardScreen() {
     if (!window.confirm("Delete this student record?")) return;
     const res = await fetch(`/api/students/${studentId}`, {
       method: "DELETE",
-      headers: await getAuthHeaders(),
+      credentials: "include",
+      headers: getSessionHeaders(),
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
@@ -342,7 +351,8 @@ export function DashboardScreen() {
       const res = await fetch(`/api/students/${editingId}`, {
         method: "PUT",
         body: payload,
-        headers: await getAuthHeaders(),
+        credentials: "include",
+        headers: getSessionHeaders(),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -388,7 +398,8 @@ export function DashboardScreen() {
     try {
       const res = await fetch("/api/students/seed", {
         method: "POST",
-        headers: await getAuthHeaders(),
+        credentials: "include",
+        headers: getSessionHeaders(),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -400,6 +411,17 @@ export function DashboardScreen() {
       setMessage(caught instanceof Error ? caught.message : "Unable to load dummy students");
     } finally {
       setSeedLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: getSessionHeaders(),
+    });
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(SESSION_STORAGE_KEY);
     }
   }
 
@@ -431,10 +453,10 @@ export function DashboardScreen() {
           { href: "/checks", label: "System Checks" },
         ]}
         onToggleTheme={toggleTheme}
-        onLogout={() => void signOut(getFirebaseAuth())}
+        onLogout={handleLogout}
       />
       <main className="section-shell px-4 pb-12 pt-5 sm:px-6 sm:pb-16 sm:pt-6">
-        <DashboardHero studentCount={students.length} adminEmail={adminAccount.email} adminPassword={adminAccount.password} />
+        <DashboardHero studentCount={students.length} adminEmail={adminAccount.email} />
         <div className="mt-6">
           <DashboardStats students={students} health={health} />
         </div>

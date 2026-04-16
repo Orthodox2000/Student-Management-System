@@ -1,22 +1,17 @@
 import { handleApiError, jsonResponse, parseId } from "@/lib/api";
-import { handleAuthError, requireFirebaseAuth } from "@/lib/firebase-auth";
+import { handleAdminAuthError, requireAdminSession } from "@/lib/admin-session";
 import { savePhoto } from "@/lib/file-storage";
 import { parseStudentFormData } from "@/lib/student-form-data";
-import {
-  deleteStudent,
-  getStudentById,
-  toStudentDTO,
-  updateStudent,
-} from "@/lib/student-repository";
+import { deleteStudent, getStudentById, toStudentDTO, updateStudent } from "@/lib/student-repository";
 
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireFirebaseAuth(_request);
+    await requireAdminSession(request);
     const { id } = await params;
     const student = await getStudentById(parseId(id));
     if (!student) {
@@ -25,7 +20,7 @@ export async function GET(
     return jsonResponse({ student: toStudentDTO(student) });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("Unauthorized:")) {
-      return handleAuthError(error);
+      return handleAdminAuthError(error);
     }
     return handleApiError(error);
   }
@@ -36,7 +31,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireFirebaseAuth(request);
+    await requireAdminSession(request);
     const { id } = await params;
     const studentId = parseId(id);
     const { parsed, photoFile, removePhoto } = await parseStudentFormData(request);
@@ -53,18 +48,18 @@ export async function PUT(
     });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("Unauthorized:")) {
-      return handleAuthError(error);
+      return handleAdminAuthError(error);
     }
     return handleApiError(error);
   }
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireFirebaseAuth(_request);
+    await requireAdminSession(request);
     const { id } = await params;
     const deleted = await deleteStudent(parseId(id));
     if (!deleted) {
@@ -73,7 +68,7 @@ export async function DELETE(
     return jsonResponse({ message: "Student deleted successfully" });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("Unauthorized:")) {
-      return handleAuthError(error);
+      return handleAdminAuthError(error);
     }
     return handleApiError(error);
   }

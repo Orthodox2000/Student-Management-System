@@ -1,235 +1,88 @@
 # Pillai University Student Management System
 
-Mobile-first full stack assessment app built with Next.js, Firebase Authentication, and Firebase Data Connect backed by PostgreSQL.
+Pillai University Student Management System is a mobile-first Next.js admin application for secure student onboarding, structured record management, image uploads, searchable tables, modal-based editing, pagination, and system health checks. The app uses Supabase Postgres for student data, Supabase Storage for student images, and a protected admin session, with validation and input sanitization applied across the stack.
 
-## Overview
+## What It Does
 
-This project implements the assessment requirements for a student management system with:
+- Admin-only login with protected dashboard and checks page
+- Add student records with validation and input sanitization
+- Upload and link student photos through Supabase Storage
+- Edit existing records in a dedicated popup form
+- View a searchable student table with pagination
+- Delete student records safely
+- Auto-generate unique admission numbers
+- Run API, database, storage, and readiness checks
 
-- admin login
-- protected dashboard
-- add student flow
-- separate edit student popup flow
-- student list with search and pagination
-- delete student
-- student photo upload
-- auto-generated unique admission numbers
-- health and connection test pages
-- startup smoke checks before app boot
-
-## Tech Stack
+## Stack
 
 - Frontend: Next.js 16, React 19, Tailwind CSS 4
-- Backend: Next.js route handlers in `app/api/*`
-- Auth: Firebase Authentication with Firebase Admin verification
-- Database: Firebase Data Connect with PostgreSQL
+- Backend: Next.js route handlers
+- Database: Supabase Postgres
+- Image Storage: Supabase Storage public bucket
 - Validation: Zod
-- Sanitization: custom server-side and client-side sanitizers
+- Auth: signed admin cookie session
+- Future Auth Option: Firebase Auth with Google sign-in can be added later if the project moves beyond fixed admin credentials
 
-## Main Features
-
-### Authentication
-
-- Admin-only login flow
-- Admin credentials sourced from env
-- Firebase custom-token login
-- Protected `/dashboard` and `/checks` routes
-
-### Student Management
-
-- Add student using a full-width form
-- Edit student using a separate popup modal
-- View students in a searchable full-width table
-- Delete students from the table
-- Seed dummy students for testing
-- Admission number auto-generated in backend
-
-### Data Quality
-
-- Sanitized input for text, email, phone, date, and multiline address
-- Controlled year and gender values
-- Course selection from controlled options with ability to add more options in UI
-- Stronger phone number validation
-- File type and file size checks for photos
-
-### Testing and Operations
-
-- `/checks` page for Firebase/API/database diagnostics
-- startup checks run automatically before `dev` and `start`
-- Firebase health route
-- API route presence checks
-- Data Connect readiness check
-
-## Route Structure
+## Routes
 
 - `/` login page
-- `/dashboard` protected student management page
-- `/checks` protected system checks page
-- `/api/auth/*` auth routes
+- `/dashboard` protected student management dashboard
+- `/checks` protected diagnostics page
+- `/api/auth/*` admin session routes
 - `/api/students/*` CRUD and seed routes
-- `/api/health/*` health and diagnostics routes
+- `/api/health/*` health and connection routes
 
-## Dashboard UX
+## Quick Start
 
-### Add Student
+1. Install dependencies with `npm install`
+2. Create `.env.local` using the variable names in [`.env.example`](./.env.example)
+3. Apply [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor
+4. Create a public Supabase bucket matching `SUPABASE_STORAGE_BUCKET`
+5. Start the app with `npm run dev`
 
-- One dedicated full-width add form
-- Course dropdown
-- Year dropdown
-- Validation errors shown inline
+## Required Env
 
-### Edit Student
+Use [`.env.example`](./.env.example) as the reference.
 
-- Student list lives below the add form
-- `Edit` opens a separate modal window
-- Save action asks for confirmation before update
-- Modal has its own close action
-
-### Student List
-
-- Full-width table
-- Search support
-- Pagination with max 30 students per page
-- Edit and delete actions per row
-
-## Setup
-
-1. Install dependencies
-
-```bash
-npm install
-```
-
-2. Create `.env.local` from `.env.example`
-
-3. Start Firebase Data Connect emulator if you are using local database development
-
-```bash
-npm run emulators:dataconnect
-```
-
-4. Start the app
-
-```bash
-npm run dev
-```
-
-5. Open:
-
-- `http://localhost:3000`
-
-## Environment Variables
-
-See [.env.example](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/.env.example)
-
-Important groups:
-
-- Firebase client SDK
-- Firebase Admin SDK
-- Admin login credentials
-- Data Connect emulator host
-- allowed dev origins
-
-## Demo and Admin Credentials
-
-Default local testing values:
-
-- Admin email: `admin@pillai.local`
-- Admin password: `Admin@12345`
-
-The login page includes an autofill helper for these values.
-
-## API Summary
-
-### Auth
-
-- `POST /api/auth/admin-login`
-- `GET /api/auth/me`
-- `POST /api/auth/demo`
-
-### Students
-
-- `GET /api/students`
-- `POST /api/students`
-- `POST /api/students/seed`
-- `GET /api/students/:id`
-- `PUT /api/students/:id`
-- `DELETE /api/students/:id`
-
-### Health
-
-- `GET /api/health`
-- `GET /api/health/firebase`
-- `GET /api/health/live`
-- `GET /api/health/ready`
-- `GET /api/health/routes`
-- `GET /api/health/self-test`
-
-Detailed request/response notes live in [docs/API.md](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/docs/API.md).
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_STORAGE_BUCKET`
+- `ADMIN_LOGIN_EMAIL`
+- `ADMIN_LOGIN_PASSWORD`
+- `AUTH_SESSION_SECRET`
 
 ## Startup Checks
 
-Runs automatically before `npm run dev` and `npm start`.
-
-Manual run:
-
-```bash
-npm run test:startup
-```
-
-Checks include:
+`npm run test:startup` verifies:
 
 - admission number format
-- env contract
-- required API routes and HTTP handlers
-- Firebase Data Connect connectivity
+- env presence
+- route handlers
+- Supabase database connectivity
+- Supabase storage bucket availability
 
-Optional local bypass:
+If startup fails with a bucket message, create that exact bucket in Supabase Storage or update `SUPABASE_STORAGE_BUCKET`.
 
-```env
-SKIP_DATACONNECT_CHECK=true
-```
+## Images and Storage
 
-## Image Uploads
+- Student images are uploaded through the app server
+- Files are stored in the Supabase bucket defined by `SUPABASE_STORAGE_BUCKET`
+- The public image URL is saved with each student record in Supabase Postgres
 
-Current status:
+## Auth Notes
 
-- student photos are uploaded to Firebase Storage when bucket env is configured
-- the signed file URL is stored as the student photo reference
+- The current production flow uses env-backed admin credentials plus a signed admin session
+- Firebase Auth is not active in the current build
+- A future enhancement can add Firebase Auth with Google sign-in for role-based institutional access
 
-Recommended production approach:
+## Docs
 
-- store files in Firebase Storage
-- store only the file URL/reference in PostgreSQL via Data Connect
-
-See [docs/OPERATIONS.md](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/docs/OPERATIONS.md) for the production path.
+- [`docs/API.md`](./docs/API.md)
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
+- [`docs/OPERATIONS.md`](./docs/OPERATIONS.md)
 
 ## GitHub Safety
 
-Safe to push:
-
-- source code
-- `dataconnect/`
-- docs
-- `.env.example`
-- Firebase config files that are not secrets
-
-Ignored by default:
-
-- `.env`
-- `.env.local`
-- uploaded local photos in `public/uploads`
-- Firebase Admin JSON service account files
-- emulator/debug artifacts
-
-## Documentation Map
-
-- [API.md](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/docs/API.md)
-- [ARCHITECTURE.md](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/docs/ARCHITECTURE.md)
-- [OPERATIONS.md](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/docs/OPERATIONS.md)
-
-## Current Notes
-
-- Data Connect schema is configured for student metadata and admission number uniqueness
-- Firebase Auth is cloud-only in the current setup
-- checks page is separated from the student management dashboard for cleaner review
+- `.env` and `.env.local` stay ignored
+- `.env.example` is safe to push
+- local secret files and uploads stay ignored

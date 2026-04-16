@@ -1,6 +1,7 @@
 export type HealthStatus = {
   status: string;
-  dataconnect?: { status: string };
+  database?: { status: string; provider?: string; message?: string };
+  storage?: { status: string; provider?: string; message?: string };
 };
 
 export type Student = {
@@ -15,6 +16,10 @@ export type Student = {
   gender: "Male" | "Female" | "Other";
   address: string;
   photoUrl: string | null;
+};
+
+export type AdminUser = {
+  email: string | null;
 };
 
 export type StudentFormState = {

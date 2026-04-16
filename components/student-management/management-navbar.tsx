@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type NavItem = {
   href: string;
@@ -18,9 +19,16 @@ export function ManagementNavbar({
   email: string | null;
   items: NavItem[];
   onToggleTheme: () => void;
-  onLogout: () => void;
+  onLogout: () => Promise<void> | void;
 }) {
+  const router = useRouter();
   const emailTag = email ? email.slice(0, 7) : "admin";
+
+  async function handleLogout() {
+    await onLogout();
+    router.replace("/");
+    router.refresh();
+  }
 
   return (
     <header className="section-shell px-4 pt-4 sm:px-6 sm:pt-6">
@@ -43,7 +51,7 @@ export function ManagementNavbar({
             <button type="button" onClick={onToggleTheme} className="theme-pill px-4 py-2 text-sm font-medium">
               {darkMode ? "Light" : "Dark"}
             </button>
-            <button type="button" onClick={onLogout} className="action-primary px-5 py-2.5 text-sm font-semibold">
+            <button type="button" onClick={() => void handleLogout()} className="action-primary px-5 py-2.5 text-sm font-semibold">
               Logout
             </button>
           </nav>

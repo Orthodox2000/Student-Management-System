@@ -6,8 +6,8 @@
 
 - `/`
   - admin login screen
-  - Firebase connectivity preview
-  - demo credential autofill
+  - Supabase connectivity preview
+  - test credential autofill
 
 ### Protected Routes
 
@@ -18,7 +18,7 @@
   - edit modal
 
 - `/checks`
-  - Firebase connectivity checks
+  - Supabase connectivity checks
   - health endpoint checks
   - protected route checks
 
@@ -26,10 +26,9 @@
 
 1. Admin enters env-backed credentials on login page
 2. `POST /api/auth/admin-login` validates credentials
-3. Server creates or updates the admin Firebase Auth user
-4. Server returns a Firebase custom token
-5. Client signs in with that custom token
-6. Protected routes fetch data with Firebase ID token in `Authorization` header
+3. Server signs an admin session cookie
+4. Client navigates to `/dashboard`
+5. Protected routes verify the admin session cookie through `/api/auth/me`
 
 ## Data Flow
 
@@ -37,18 +36,13 @@
 
 - UI sends `multipart/form-data` to student APIs
 - route handlers sanitize and validate input
-- repository sends operations through Firebase Data Connect
+- repository sends operations through Supabase Postgres
 - PostgreSQL stores structured student metadata
 
 ### Photos
 
-Current:
-
-- uploaded through server-side Firebase Admin Storage
-
-Recommended production:
-
-- keep photo URL/reference in student record
+- uploaded through server-side Supabase Storage calls
+- public URLs are stored in the student record
 
 ## Core Files
 
@@ -62,8 +56,8 @@ Recommended production:
 ### Auth
 
 - [admin-login route](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/app/api/auth/admin-login/route.ts)
-- [firebase-admin.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/firebase-admin.ts)
-- [firebase-auth.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/firebase-auth.ts)
+- [logout route](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/app/api/auth/logout/route.ts)
+- [admin-session.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/admin-session.ts)
 
 ### Data
 
@@ -71,10 +65,12 @@ Recommended production:
 - [student by id route](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/app/api/students/[id]/route.ts)
 - [seed route](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/app/api/students/seed/route.ts)
 - [student-repository.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/student-repository.ts)
-- [schema.gql](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/dataconnect/schema/schema.gql)
+- [supabase.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/supabase.ts)
+- [schema.sql](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/supabase/schema.sql)
 
 ### Validation and Sanitization
 
 - [student-schema.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/student-schema.ts)
 - [student-form-data.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/student-form-data.ts)
 - [sanitize.ts](c:/Users/ANKIT/Desktop/work%20projects/pillai%20assesment/student-management-system/lib/sanitize.ts)
+

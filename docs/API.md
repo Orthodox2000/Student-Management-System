@@ -2,13 +2,13 @@
 
 Base URL for local development: `http://localhost:3000`
 
-All student endpoints are protected and use Firebase ID token verification.
+All student endpoints are protected by the admin session cookie created after successful login.
 
 ## Auth
 
 ### `POST /api/auth/admin-login`
 
-Validates admin credentials from env and returns a Firebase custom token.
+Validates admin credentials from env and creates the admin session cookie.
 
 Request body:
 
@@ -24,41 +24,36 @@ Response:
 ```json
 {
   "ok": true,
-  "customToken": "firebase_custom_token",
   "user": {
-    "uid": "firebase_uid",
     "email": "admin@pillai.local"
-  }
+  },
+  "message": "Admin session created successfully."
 }
 ```
 
+### `POST /api/auth/logout`
+
+Clears the admin session cookie.
+
 ### `GET /api/auth/me`
 
-Validates Firebase ID token and returns authenticated user info.
-
-Required header:
-
-- `Authorization: Bearer <firebase_id_token>`
-
-### `POST /api/auth/demo`
-
-Creates or confirms a demo login in local development.
+Reads the admin session cookie and returns authenticated user info.
 
 ## Student Endpoints
 
-## `GET /api/students`
+### `GET /api/students`
 
 Returns students ordered newest first.
 
 Optional query params:
 
-- `query`: filter by name, course, admission number, or email
+- `query`: filter by name, course, admission number, email, or mobile number
 
-## `GET /api/students/:id`
+### `GET /api/students/:id`
 
 Returns a single student by ID.
 
-## `POST /api/students`
+### `POST /api/students`
 
 Creates a student.
 
@@ -87,9 +82,9 @@ Validation notes:
 - year must match supported academic year values
 - mobile number must contain 10 to 15 digits after normalization
 - photo must be png, jpg, jpeg, or webp and 5 MB or smaller
-- uploaded photos are stored in Firebase Storage and the signed URL is saved in the student record
+- uploaded photos are stored in a public Supabase Storage bucket and the public URL is saved in the student record
 
-## `PUT /api/students/:id`
+### `PUT /api/students/:id`
 
 Updates a student.
 
@@ -101,46 +96,43 @@ Optional extra field:
 
 - `removePhoto=true`
 
-## `DELETE /api/students/:id`
+### `DELETE /api/students/:id`
 
 Deletes a student by ID.
 
-## `POST /api/students/seed`
+### `POST /api/students/seed`
 
 Creates a small demo dataset for testing the table and edit flow.
-Existing sample students are skipped by email.
+Existing sample students are skipped when unique constraints already exist.
 
 ## Health Endpoints
 
-## `GET /api/health`
+### `GET /api/health`
 
 Main application health endpoint.
 
-## `GET /api/health/firebase`
+### `GET /api/health/supabase`
 
-Checks Firebase Authentication reachability.
+Checks Supabase database and storage reachability.
 
-## `GET /api/health/live`
+### `GET /api/health/live`
 
 Simple liveness check.
 
-## `GET /api/health/ready`
+### `GET /api/health/ready`
 
-Readiness check for backend availability and Data Connect access.
+Readiness check for backend availability, database access, and storage bucket access.
 
-## `GET /api/health/routes`
+### `GET /api/health/routes`
 
 Lists implemented routes for quick API discovery.
 
-## `GET /api/health/self-test`
+### `GET /api/health/self-test`
 
-Runs internal checks such as admission number format and database access checks.
+Runs internal checks such as admission number format and backend access checks.
 
 ## Protected UI Routes
 
 - `/dashboard`
 - `/checks`
 
-## Notes
-
-- images are uploaded to Firebase Storage when bucket env is configured

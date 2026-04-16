@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 type LandingPanelProps = {
   children: React.ReactNode;
   darkMode: boolean;
-  firebaseLoading: boolean;
-  firebaseStatus: string;
+  connectionLoading: boolean;
+  connectionStatus: string;
   onToggleTheme: () => void;
-  onTestFirebaseConnection: () => void;
+  onTestConnection: () => void;
   onShowLogin: () => void;
   onUseDemoCredentials: () => void;
 };
@@ -14,10 +14,10 @@ type LandingPanelProps = {
 export function LandingPanel({
   children,
   darkMode,
-  firebaseLoading,
-  firebaseStatus,
+  connectionLoading,
+  connectionStatus,
   onToggleTheme,
-  onTestFirebaseConnection,
+  onTestConnection,
   onShowLogin,
   onUseDemoCredentials,
 }: LandingPanelProps) {
@@ -36,8 +36,8 @@ export function LandingPanel({
             <span className="brand-wordmark">Pillai College</span>
           </div>
           <nav className="hidden items-center gap-8 text-sm text-[var(--foreground-muted)] lg:flex">
-            <button type="button" onClick={onTestFirebaseConnection} className="nav-link-clean">
-              {firebaseLoading ? "Testing Firebase..." : "Test Firebase Connection"}
+            <button type="button" onClick={onTestConnection} className="nav-link-clean">
+              {connectionLoading ? "Testing Supabase..." : "Test Supabase Connection"}
             </button>
             <button type="button" onClick={onShowLogin} className="nav-link-clean">Admin Login</button>
             <span className="nav-link-clean">Student Management</span>
@@ -79,8 +79,8 @@ export function LandingPanel({
               </p>
             </div>
             <div className="surface-soft rounded-[1.6rem] p-5">
-              <p className="eyebrow">Firebase Connection</p>
-              <p className="mt-3 text-sm leading-7 text-[var(--foreground-muted)]">{firebaseStatus}</p>
+              <p className="eyebrow">Supabase Connection</p>
+              <p className="mt-3 text-sm leading-7 text-[var(--foreground-muted)]">{connectionStatus}</p>
             </div>
           </div>
           <div>{children}</div>

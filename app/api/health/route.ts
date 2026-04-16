@@ -1,17 +1,44 @@
-import { getAdminDataConnect } from "@/lib/dataconnect";
+import { getSupabaseAdmin, getSupabaseBucketName } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 
+async function checkSupabase() {
+  const supabase = getSupabaseAdmin();
+  const bucketName = getSupabaseBucketName();
+
+  const [{ error: databaseError }, { data: buckets, error: bucketError }] = await Promise.all([
+    supabase.from("students").select("id", { count: "exact", head: true }),
+    supabase.storage.listBuckets(),
+  ]);
+
+  if (databaseError) {
+    throw new Error(`Database check failed: ${databaseError.message}`);
+  }
+
+  if (bucketError) {
+    throw new Error(`Storage check failed: ${bucketError.message}`);
+  }
+
+  const bucketExists = (buckets ?? []).some((bucket) => bucket.name === bucketName);
+  if (!bucketExists) {
+    throw new Error(`Storage bucket ${bucketName} was not found.`);
+  }
+}
+
 export async function GET() {
   try {
-    await getAdminDataConnect().executeQuery("ListStudents");
+    await checkSupabase();
     return Response.json({
       status: "ok",
       service: "student-management-system",
       timestamp: new Date().toISOString(),
-      dataconnect: {
+      database: {
         status: "ok",
-        mode: process.env.DATA_CONNECT_EMULATOR_HOST ? "emulator" : "cloud",
+        provider: "supabase",
+      },
+      storage: {
+        status: "ok",
+        provider: "supabase",
       },
     });
   } catch (error) {
@@ -20,9 +47,10 @@ export async function GET() {
         status: "degraded",
         service: "student-management-system",
         timestamp: new Date().toISOString(),
-        dataconnect: {
+        database: {
           status: "error",
-          message: error instanceof Error ? error.message : "Unknown Data Connect error",
+          provider: "supabase",
+          message: error instanceof Error ? error.message : "Unknown Supabase error",
         },
       },
       { status: 503 },

@@ -1,118 +1,145 @@
-import { getAdminDataConnect } from "@/lib/dataconnect";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { buildAdmissionNumber } from "@/lib/admission-number";
 import type { StudentInput } from "@/lib/types";
 
-type StudentDC = {
+type StudentRow = {
   id: string;
-  admissionNumber: string;
+  admission_number: string;
   name: string;
   course: string;
   year: number;
-  dateOfBirth: string;
+  date_of_birth: string;
   email: string;
-  mobileNumber: string;
+  mobile_number: string;
   gender: "Male" | "Female" | "Other";
   address: string;
-  photoUrl?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  photo_url: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
-type StudentCreateVars = {
-  admissionNumber: string;
+type StudentInsert = {
+  admission_number: string;
   name: string;
   course: string;
   year: number;
-  dateOfBirth: string;
+  date_of_birth: string;
   email: string;
-  mobileNumber: string;
+  mobile_number: string;
   gender: "Male" | "Female" | "Other";
   address: string;
-  photoUrl?: string | null;
+  photo_url: string | null;
 };
 
-type StudentUpdateVars = Omit<StudentCreateVars, "admissionNumber"> & { id: string };
-
-function mapInputToVars(input: StudentInput, photoUrl: string | null | undefined): StudentCreateVars {
+function mapInputToInsert(input: StudentInput, photoUrl: string | null | undefined): StudentInsert {
   return {
-    admissionNumber: buildAdmissionNumber(),
+    admission_number: buildAdmissionNumber(),
     name: input.name,
     course: input.course,
     year: input.year,
-    dateOfBirth: input.dateOfBirth,
+    date_of_birth: input.dateOfBirth,
     email: input.email,
-    mobileNumber: input.mobileNumber,
+    mobile_number: input.mobileNumber,
     gender: input.gender,
     address: input.address,
-    photoUrl: photoUrl ?? null,
+    photo_url: photoUrl ?? null,
+  };
+}
+
+function mapRow(row: StudentRow) {
+  return {
+    id: row.id,
+    admissionNumber: row.admission_number,
+    name: row.name,
+    course: row.course,
+    year: row.year,
+    dateOfBirth: row.date_of_birth,
+    email: row.email,
+    mobileNumber: row.mobile_number,
+    gender: row.gender,
+    address: row.address,
+    photoUrl: row.photo_url,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
 export async function listStudents(search?: string) {
-  const dc = getAdminDataConnect();
+  const supabase = getSupabaseAdmin();
+  let query = supabase
+    .from("students")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  if (!search?.trim()) {
-    const res = await dc.executeQuery<{ students: StudentDC[] }>("ListStudents");
-    return res.data.students ?? [];
+  const normalizedSearch = search?.trim();
+  if (normalizedSearch) {
+    const pattern = `%${normalizedSearch}%`;
+    query = query.or([
+      `name.ilike.${pattern}`,
+      `course.ilike.${pattern}`,
+      `email.ilike.${pattern}`,
+      `admission_number.ilike.${pattern}`,
+      `mobile_number.ilike.${pattern}`,
+    ].join(","));
   }
 
-  const res = await dc.executeQuery<{ students: StudentDC[] }, { query: string }>(
-    "SearchStudents",
-    { query: search.trim() },
-    undefined,
-  );
-  return res.data.students ?? [];
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []).map(mapRow);
 }
 
 export async function getStudentById(id: string) {
-  const dc = getAdminDataConnect();
-  const res = await dc.executeQuery<{ student?: StudentDC | null }, { id: string }>(
-    "GetStudentById",
-    { id },
-    undefined,
-  );
-  return res.data.student ?? null;
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("students")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapRow(data as StudentRow) : null;
 }
 
 export async function createStudent(input: StudentInput, photoUrl: string | null) {
-  const dc = getAdminDataConnect();
-  const vars = mapInputToVars(input, photoUrl);
-  await dc.executeMutation<unknown, StudentCreateVars>("CreateStudent", vars, undefined);
+  const supabase = getSupabaseAdmin();
+  const payload = mapInputToInsert(input, photoUrl);
+  const { data, error } = await supabase
+    .from("students")
+    .insert(payload)
+    .select("*")
+    .single();
 
-  const created = await findStudentByAdmission(vars.admissionNumber);
-  if (!created) {
-    throw new Error("Student created but could not be reloaded.");
-  }
-  return created;
+  if (error) throw error;
+  return mapRow(data as StudentRow);
 }
 
-export async function updateStudent(
-  id: string,
-  input: StudentInput,
-  photoUrl: string | null | undefined,
-) {
+export async function updateStudent(id: string, input: StudentInput, photoUrl: string | null | undefined) {
   const existing = await getStudentById(id);
   if (!existing) {
     return null;
   }
 
-  const dc = getAdminDataConnect();
-  const mapped = mapInputToVars(input, photoUrl === undefined ? existing.photoUrl ?? null : photoUrl);
-  const vars: StudentUpdateVars = {
-    name: mapped.name,
-    course: mapped.course,
-    year: mapped.year,
-    dateOfBirth: mapped.dateOfBirth,
-    email: mapped.email,
-    mobileNumber: mapped.mobileNumber,
-    gender: mapped.gender,
-    address: mapped.address,
-    photoUrl: mapped.photoUrl,
-    id,
-  };
+  const supabase = getSupabaseAdmin();
+  const nextPhotoUrl = photoUrl === undefined ? existing.photoUrl : photoUrl;
+  const { data, error } = await supabase
+    .from("students")
+    .update({
+      name: input.name,
+      course: input.course,
+      year: input.year,
+      date_of_birth: input.dateOfBirth,
+      email: input.email,
+      mobile_number: input.mobileNumber,
+      gender: input.gender,
+      address: input.address,
+      photo_url: nextPhotoUrl,
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
 
-  await dc.executeMutation<unknown, StudentUpdateVars>("UpdateStudent", vars, undefined);
-  return getStudentById(id);
+  if (error) throw error;
+  return mapRow(data as StudentRow);
 }
 
 export async function deleteStudent(id: string) {
@@ -121,30 +148,12 @@ export async function deleteStudent(id: string) {
     return null;
   }
 
-  const dc = getAdminDataConnect();
-  await dc.executeMutation<unknown, { id: string }>("DeleteStudent", { id }, undefined);
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.from("students").delete().eq("id", id);
+  if (error) throw error;
   return existing;
 }
 
-async function findStudentByAdmission(admissionNumber: string) {
-  const students = await listStudents(admissionNumber);
-  return students.find((item) => item.admissionNumber === admissionNumber) ?? null;
-}
-
-export function toStudentDTO(student: StudentDC) {
-  return {
-    id: student.id,
-    admissionNumber: student.admissionNumber,
-    name: student.name,
-    course: student.course,
-    year: student.year,
-    dateOfBirth: student.dateOfBirth,
-    email: student.email,
-    mobileNumber: student.mobileNumber,
-    gender: student.gender,
-    address: student.address,
-    photoUrl: student.photoUrl ?? null,
-    createdAt: student.createdAt,
-    updatedAt: student.updatedAt,
-  };
+export function toStudentDTO(student: ReturnType<typeof mapRow>) {
+  return student;
 }

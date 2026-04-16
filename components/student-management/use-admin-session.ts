@@ -1,61 +1,65 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, type User } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { getFirebaseAuth } from "@/lib/firebase-client";
+import type { AdminUser } from "@/components/student-management/types";
 
 type Mode = "guest" | "protected";
+const SESSION_STORAGE_KEY = "pillai_admin_session_token";
 
 export function useAdminSession(mode: Mode) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
 
-    try {
-      const auth = getFirebaseAuth();
-      const unsubscribe = onAuthStateChanged(
-        auth,
-        (nextUser) => {
-          if (!active) return;
-          setUser(nextUser);
-          setLoading(false);
-          setError("");
+    async function loadSession() {
+      try {
+        const sessionToken =
+          typeof window !== "undefined"
+            ? window.localStorage.getItem(SESSION_STORAGE_KEY)
+            : null;
 
-          if (mode === "guest" && nextUser) {
+        const res = await fetch("/api/auth/me", {
+          method: "GET",
+          cache: "no-store",
+          credentials: "include",
+          headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : undefined,
+        });
+
+        const data = await res.json().catch(() => null);
+        if (!active) return;
+
+        if (res.ok && data?.authenticated) {
+          setUser({ email: data.user?.email ?? null });
+          setError("");
+          if (mode === "guest") {
             router.replace("/dashboard");
           }
-
-          if (mode === "protected" && !nextUser) {
-            router.replace("/");
-          }
-        },
-        (nextError) => {
-          if (!active) return;
-          setError(nextError.message || "Unable to listen for authentication changes.");
-          setLoading(false);
+        } else {
+          setUser(null);
           if (mode === "protected") {
             router.replace("/");
           }
-        },
-      );
-
-      return () => {
-        active = false;
-        unsubscribe();
-      };
-    } catch (caught) {
-      if (!active) return;
-      setError(caught instanceof Error ? caught.message : "Unable to initialize Firebase authentication.");
-      setLoading(false);
-      if (mode === "protected") {
-        router.replace("/");
+        }
+      } catch (caught) {
+        if (!active) return;
+        setUser(null);
+        setError(caught instanceof Error ? caught.message : "Unable to verify the admin session.");
+        if (mode === "protected") {
+          router.replace("/");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
     }
+
+    void loadSession();
 
     return () => {
       active = false;

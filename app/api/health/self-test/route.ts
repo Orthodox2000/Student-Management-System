@@ -1,5 +1,5 @@
 import { buildAdmissionNumber } from "@/lib/admission-number";
-import { getAdminDataConnect } from "@/lib/dataconnect";
+import { getSupabaseAdmin, getSupabaseBucketName } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 
@@ -8,15 +8,28 @@ export async function GET() {
 
   const sampleAdmission = buildAdmissionNumber(7);
   checks.admissionNumber = {
-    ok: /^PU\d{4}\d{5}$/.test(sampleAdmission),
+    ok: /^PU\d{9}$/.test(sampleAdmission),
     detail: sampleAdmission,
   };
 
   try {
-    await getAdminDataConnect().executeQuery("ListStudents");
-    checks.dataconnect = { ok: true, detail: "Data Connect query successful" };
+    const supabase = getSupabaseAdmin();
+    const bucketName = getSupabaseBucketName();
+
+    const { error: queryError } = await supabase.from("students").select("id", { count: "exact", head: true });
+    checks.database = {
+      ok: !queryError,
+      detail: queryError?.message ?? "Supabase query successful",
+    };
+
+    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+    const bucketExists = !bucketError && (buckets ?? []).some((bucket) => bucket.name === bucketName);
+    checks.storage = {
+      ok: bucketExists,
+      detail: bucketError?.message ?? (bucketExists ? `Bucket ${bucketName} available` : `Bucket ${bucketName} not found`),
+    };
   } catch (error) {
-    checks.dataconnect = {
+    checks.database = {
       ok: false,
       detail: error instanceof Error ? error.message : "Unknown error",
     };

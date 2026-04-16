@@ -1,6 +1,7 @@
-import { getFirebaseAdminAuth } from "@/lib/firebase-admin";
+import { NextResponse } from "next/server";
 import { handleApiError, jsonResponse } from "@/lib/api";
 import { sanitizeEmail } from "@/lib/sanitize";
+import { createAdminSessionToken, withAdminSession } from "@/lib/admin-session";
 
 export const runtime = "nodejs";
 
@@ -38,54 +39,20 @@ export async function POST(request: Request) {
       return jsonResponse({ error: "Email and password are required." }, 400);
     }
 
-    if (
-      submitted.email !== configured.email ||
-      submitted.password !== configured.password
-    ) {
+    if (submitted.email !== configured.email || submitted.password !== configured.password) {
       return jsonResponse({ error: "Invalid admin credentials." }, 401);
     }
 
-    const auth = getFirebaseAdminAuth();
-    let userRecord;
-
-    try {
-      userRecord = await auth.getUserByEmail(configured.email);
-      userRecord = await auth.updateUser(userRecord.uid, {
-        email: configured.email,
-        password: configured.password,
-        displayName: "Pillai College Admin",
-        emailVerified: true,
-      });
-    } catch (error) {
-      const code =
-        typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
-
-      if (code !== "auth/user-not-found") {
-        throw error;
-      }
-
-      userRecord = await auth.createUser({
-        email: configured.email,
-        password: configured.password,
-        displayName: "Pillai College Admin",
-        emailVerified: true,
-      });
-    }
-
-    await auth.setCustomUserClaims(userRecord.uid, { role: "admin", admin: true });
-    const customToken = await auth.createCustomToken(userRecord.uid, {
-      role: "admin",
-      admin: true,
-    });
-
-    return jsonResponse({
+    const response = NextResponse.json({
       ok: true,
-      customToken,
+      sessionToken: createAdminSessionToken(configured.email),
       user: {
-        uid: userRecord.uid,
-        email: userRecord.email,
+        email: configured.email,
       },
+      message: "Admin session created successfully.",
     });
+
+    return withAdminSession(response, configured.email);
   } catch (error) {
     return handleApiError(error);
   }

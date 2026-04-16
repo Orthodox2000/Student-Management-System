@@ -1,16 +1,16 @@
 import { jsonResponse } from "@/lib/api";
-import { handleAuthError, requireFirebaseAuth } from "@/lib/firebase-auth";
+import { handleAdminAuthError, requireAdminSession } from "@/lib/admin-session";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const user = await requireFirebaseAuth(request);
+    const user = await requireAdminSession(request);
     return jsonResponse({
       authenticated: true,
       user,
     });
   } catch (error) {
-    return handleAuthError(error);
+    return handleAdminAuthError(error);
   }
 }

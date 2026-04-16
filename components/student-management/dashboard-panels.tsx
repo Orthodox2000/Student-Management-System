@@ -37,7 +37,7 @@ export function DashboardHero({
           <div className="surface-soft rounded-[1.5rem] p-4">
             <p className="eyebrow">Admin Account</p>
             <p className="mt-3 text-base font-semibold text-[var(--foreground-strong)]">{adminEmail}</p>
-            <p className="mt-2 text-sm text-[var(--foreground-muted)]">Password synced to Firebase Auth from env: {adminPassword}</p>
+            <p className="mt-2 text-sm text-[var(--foreground-muted)]">Password synced to admin env for local testing: {adminPassword}</p>
           </div>
         </div>
       </div>
@@ -56,7 +56,7 @@ export function DashboardStats({
     <section id="api-connections" className="dashboard-grid">
       <StatCard label="Total Students" value={String(students.length)} note="Loaded from secured API" />
       <StatCard label="API Status" value={health?.status ?? "..."} note="Health route visibility" />
-      <StatCard label="Data Connect" value={health?.dataconnect?.status ?? "unknown"} note="PostgreSQL-backed connector" />
+      <StatCard label="Supabase" value={health?.database?.status ?? "unknown"} note="Supabase Postgres + storage" />
       <StatCard label="Courses Offered" value={String(COURSE_OPTIONS.length)} note="Controlled options for consistent formatting" />
     </section>
   );
@@ -172,7 +172,7 @@ export function StudentFormPanel({
         <div className="surface-soft rounded-[1.5rem] p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[var(--foreground-muted)]">Photo Reference</p>
           <p className="mt-2 text-sm text-[var(--foreground-strong)]">
-            Stored as a file reference or URL with the student record.
+            Stored in a Supabase storage bucket and linked with the student record.
           </p>
         </div>
       </div>
@@ -485,3 +485,5 @@ export function StudentListPanel({
     </SectionCard>
   );
 }
+
+
