@@ -10,11 +10,9 @@ type FormErrors = Partial<Record<keyof StudentFormState | "photo", string>>;
 export function DashboardHero({
   studentCount,
   adminEmail,
-  adminPassword,
 }: {
   studentCount: number;
   adminEmail: string;
-  adminPassword: string;
 }) {
   return (
     <SectionCard className="panel-spotlight">
@@ -37,7 +35,7 @@ export function DashboardHero({
           <div className="surface-soft rounded-[1.5rem] p-4">
             <p className="eyebrow">Admin Account</p>
             <p className="mt-3 text-base font-semibold text-[var(--foreground-strong)]">{adminEmail}</p>
-            <p className="mt-2 text-sm text-[var(--foreground-muted)]">Password synced to admin env for local testing: {adminPassword}</p>
+            <p className="mt-2 text-sm text-[var(--foreground-muted)]">Local autofill can be enabled with optional public demo env variables. Production credentials should stay server-only.</p>
           </div>
         </div>
       </div>
