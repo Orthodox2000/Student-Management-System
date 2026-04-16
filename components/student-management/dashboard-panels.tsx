@@ -176,7 +176,7 @@ export function StudentFormPanel({
       </div>
 
       <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-        <InputField label="Full Name" value={form.name} onChange={(value) => onChange("name", value)} required placeholder="Enter student name" error={errors.name} />
+        <InputField label="Full Name" value={form.name} onChange={(value) => onChange("name", value)} required placeholder="Enter student name" error={errors.name} className="sm:col-span-2" />
         <SelectField label="Course" value={form.course} onChange={(value) => onChange("course", value)} error={errors.course}>
           <option value="">Select a course</option>
           {courseOptions.map((course) => (
@@ -195,7 +195,7 @@ export function StudentFormPanel({
         </SelectField>
         <InputField label="Date of Birth" type="date" value={form.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} required error={errors.dateOfBirth} />
         <InputField label="Email" type="email" value={form.email} onChange={(value) => onChange("email", value)} required placeholder="student@example.com" error={errors.email} maxLength={180} />
-        <InputField label="Mobile Number" value={form.mobileNumber} onChange={(value) => onChange("mobileNumber", value)} required placeholder="+91 98765 43210" error={errors.mobileNumber} maxLength={20} />
+        <InputField label="Mobile Number" value={form.mobileNumber} onChange={(value) => onChange("mobileNumber", value)} required placeholder="+91 9876543210" error={errors.mobileNumber} maxLength={14} inputMode="numeric" />
 
         <SelectField label="Gender" value={form.gender} onChange={(value) => onGenderChange(value as Student["gender"])} error={errors.gender}>
           <option value="Male">Male</option>
@@ -214,7 +214,7 @@ export function StudentFormPanel({
           {errors.photo ? <span className="mt-2 block text-xs text-[var(--danger)]">{errors.photo}</span> : null}
         </label>
 
-        <TextareaField label="Address" value={form.address} onChange={(value) => onChange("address", value)} required placeholder="Full student address" error={errors.address} />
+        <TextareaField label="Address" value={form.address} onChange={(value) => onChange("address", value)} required placeholder="Full student address" error={errors.address} className="sm:col-span-2" />
 
         <div className="sm:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center">
           <button type="submit" disabled={formLoading} className="action-primary justify-center px-5 py-3 text-sm font-semibold disabled:opacity-50">
@@ -281,7 +281,7 @@ export function EditStudentModal({
 
           <form onSubmit={onSubmit}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <InputField label="Full Name" value={form.name} onChange={(value) => onChange("name", value)} required placeholder="Enter student name" error={errors.name} />
+              <InputField label="Full Name" value={form.name} onChange={(value) => onChange("name", value)} required placeholder="Enter student name" error={errors.name} className="sm:col-span-2" />
               <SelectField label="Course" value={form.course} onChange={(value) => onChange("course", value)} error={errors.course}>
                 <option value="">Select a course</option>
                 {courseOptions.map((course) => (
@@ -300,7 +300,7 @@ export function EditStudentModal({
               </SelectField>
               <InputField label="Date of Birth" type="date" value={form.dateOfBirth} onChange={(value) => onChange("dateOfBirth", value)} required error={errors.dateOfBirth} />
               <InputField label="Email" type="email" value={form.email} onChange={(value) => onChange("email", value)} required placeholder="student@example.com" error={errors.email} maxLength={180} />
-              <InputField label="Mobile Number" value={form.mobileNumber} onChange={(value) => onChange("mobileNumber", value)} required placeholder="+91 98765 43210" error={errors.mobileNumber} maxLength={20} />
+              <InputField label="Mobile Number" value={form.mobileNumber} onChange={(value) => onChange("mobileNumber", value)} required placeholder="+91 9876543210" error={errors.mobileNumber} maxLength={14} inputMode="numeric" />
 
               <SelectField label="Gender" value={form.gender} onChange={(value) => onGenderChange(value as Student["gender"])} error={errors.gender}>
                 <option value="Male">Male</option>
@@ -319,7 +319,7 @@ export function EditStudentModal({
                 {errors.photo ? <span className="mt-2 block text-xs text-[var(--danger)]">{errors.photo}</span> : null}
               </label>
 
-              <TextareaField label="Address" value={form.address} onChange={(value) => onChange("address", value)} required placeholder="Full student address" error={errors.address} />
+              <TextareaField label="Address" value={form.address} onChange={(value) => onChange("address", value)} required placeholder="Full student address" error={errors.address} className="sm:col-span-2" />
 
               <label className="sm:col-span-2 flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
                 <input type="checkbox" checked={removePhoto} onChange={(event) => onRemovePhotoChange(event.target.checked)} />

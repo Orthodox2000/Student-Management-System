@@ -10,7 +10,7 @@ import { useAdminSession } from "@/components/student-management/use-admin-sessi
 import { useThemeMode } from "@/components/student-management/use-theme-mode";
 import { COURSE_OPTIONS, normalizeCourseLabel } from "@/lib/student-options";
 import { studentFormSchema } from "@/lib/student-schema";
-import { sanitizeDate, sanitizeEmail, sanitizeMultilineText, sanitizePhone, sanitizeText } from "@/lib/sanitize";
+import { sanitizeDate, sanitizeEmail, sanitizeMultilineInput, sanitizeMultilineText, sanitizePhone, sanitizeText, sanitizeTextInput } from "@/lib/sanitize";
 
 const initialForm: StudentFormState = {
   name: "",
@@ -39,9 +39,9 @@ function sanitizeFormValue(field: keyof StudentFormState, value: string) {
     case "dateOfBirth":
       return sanitizeDate(value);
     case "address":
-      return sanitizeMultilineText(value);
+      return sanitizeMultilineInput(value);
     default:
-      return sanitizeText(value);
+      return sanitizeTextInput(value);
   }
 }
 

@@ -3,6 +3,7 @@ type InputFieldProps = {
   value: string;
   onChange: (value: string) => void;
   type?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   placeholder?: string;
   autoComplete?: string;
   min?: number;
@@ -10,6 +11,7 @@ type InputFieldProps = {
   maxLength?: number;
   required?: boolean;
   error?: string;
+  className?: string;
 };
 
 export function SectionCard({
@@ -67,6 +69,7 @@ export function InputField({
   value,
   onChange,
   type = "text",
+  inputMode,
   placeholder,
   autoComplete,
   min,
@@ -74,13 +77,15 @@ export function InputField({
   maxLength,
   required,
   error,
+  className,
 }: InputFieldProps) {
   return (
-    <label className="field-label">
+    <label className={`field-label ${className ?? ""}`}>
       {label}
       <input
         type={type}
         value={value}
+        inputMode={inputMode}
         min={min}
         max={max}
         maxLength={maxLength}
@@ -130,6 +135,7 @@ export function TextareaField({
   placeholder,
   required,
   error,
+  className,
 }: {
   label: string;
   value: string;
@@ -137,9 +143,10 @@ export function TextareaField({
   placeholder?: string;
   required?: boolean;
   error?: string;
+  className?: string;
 }) {
   return (
-    <label className="field-label sm:col-span-2">
+    <label className={`field-label sm:col-span-2 ${className ?? ""}`}>
       {label}
       <textarea
         rows={4}
